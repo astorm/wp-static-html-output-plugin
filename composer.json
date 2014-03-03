@@ -1,0 +1,24 @@
+{
+	"name": "pulsestorm/wp-static-html-output-plugin",
+	"type": "command",
+	"description": "Unofficial WP-CLI wrapper for the WP Static HTML Output Plugin ",
+	"keywords": ["wp-cli", "static", "wordpress", "html", ""],
+	"homepage": "https://github.com/astorm/wp-static-html-output-plugin",
+	"require": {
+		"php": ">=5.3"
+	},
+	"license": "MIT",
+	"authors": [
+		{
+			"name": "Alan Storm",			
+			"homepage": "http://alanstorm.com"
+		}
+	],
+	"support": {
+		"issues": "https://github.com/astorm/wp-static-html-output-plugin/issues",
+		"source": "https://github.com/astorm/wp-static-html-output-plugin"
+	},
+	"autoload": {
+		"files": [ "static-html-output-plugin.php" ]
+	}
+}
