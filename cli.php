@@ -1,4 +1,6 @@
 <?php
+// Bail if WP-CLI is not present
+if ( !defined( 'WP_CLI' ) ) return;
 
 
 /**
