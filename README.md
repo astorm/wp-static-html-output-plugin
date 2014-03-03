@@ -1,6 +1,6 @@
 CLI interface for the WP Static HTML Output
 --------------------------------------------------
-This repository contains a [WP-CLI plugin](https://github.com/wp-cli/wp-cli)  for the [WP Static HTML Output](https://wordpress.org/plugins/static-html-output-plugin/).  After installing this plugin, a Wordpress administrator will have access to a `wp static-html-output generate` command
+This repository contains a [WP-CLI plugin](https://github.com/wp-cli/wp-cli)  for the [WP Static HTML Output  Plugin](https://wordpress.org/plugins/static-html-output-plugin/).  After installing this plugin, a Wordpress administrator will have access to a `wp static-html-output generate` command
 
     $ wp static-html-output generate
     usage: wp static-html-output generate <name>
