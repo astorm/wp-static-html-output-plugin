@@ -19,6 +19,6 @@
 		"source": "https://github.com/astorm/wp-static-html-output-plugin"
 	},
 	"autoload": {
-		"files": [ "static-html-output-plugin.php" ]
+		"files": [ "cli.php" ]
 	}
 }

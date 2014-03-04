@@ -1,4 +1,7 @@
 <?php
+// Bail if WP-CLI is not present
+if ( !defined( 'WP_CLI' ) ) return;
+
 /*
 Plugin Name: WP Static HTML Output CLI
 Version: 1.0
