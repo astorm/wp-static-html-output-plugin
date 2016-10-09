@@ -324,11 +324,13 @@ class StaticHtmlOutput_Cli extends StaticHtmlOutput
 	
 	protected function shouldAddUrlToQueue($newUrl, $currentUrl, $urlsQueue)
 	{
-        return (!isset($this->_exportLog[$newUrl]) && 
-                $newUrl != $currentUrl 
-                && !in_array($newUrl,$urlsQueue)
-                && (strpos($newUrl, '&amp;title') === false)
-                && (strpos($newUrl, '&amp;description') === false))                	
+        return (
+                !isset($this->_exportLog[$newUrl])          && 
+                $newUrl != $currentUrl                      && 
+                !in_array($newUrl,$urlsQueue)               && 
+                (strpos($newUrl, '&amp;title') === false)   &&
+                (strpos($newUrl, '&amp;description') === false)
+            );                	
 	}
 	
 	protected function processQueue($urlsQueue, $currentUrl, $baseUrl, 
