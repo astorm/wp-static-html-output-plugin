@@ -1,6 +1,6 @@
 {
 	"name": "pulsestorm/wp-static-html-output-plugin",
-	"type": "command",
+	"type": "wp-cli-package",
 	"description": "Unofficial WP-CLI wrapper for the WP Static HTML Output Plugin ",
 	"keywords": ["wp-cli", "static", "wordpress", "html", ""],
 	"homepage": "https://github.com/astorm/wp-static-html-output-plugin",
