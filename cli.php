@@ -55,6 +55,12 @@ class WPStaticHtmlOutput_Command extends WP_CLI_Command {
             WP_CLI::success($path);                
         }        
         WP_CLI::success( "Done" );
+        
+        $path = trim($path,'/');
+        if(file_exists(__DIR__ . '/' . 'instructions.txt'))
+        {
+            WP_CLI::success(file_get_contents(__DIR__ . '/' . 'instructions.txt'));    
+        }
     }
 }
 
