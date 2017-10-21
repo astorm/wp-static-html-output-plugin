@@ -5,7 +5,7 @@ if ( !defined( 'WP_CLI' ) ) return;
 /*
 Plugin Name: WP Static HTML Output CLI
 Version: 1.0
-Description: A CLI interface for the WP Super Cache plugin
+Description: A CLI interface for the Static HTML Output Plugin
 Author: Alan Storm
 Author URI: http://alanstorm.com
 Plugin URI: X
