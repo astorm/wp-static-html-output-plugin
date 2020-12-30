@@ -2,26 +2,26 @@
 class StaticHtmlOutput_Cli extends StaticHtmlOutput
 {
     protected $oembedUrls=[];
-    
+
     public function generateArchiveOverride()
     {
         return $this->_generateArchive();
     }
-    
+
     public function getOptionsOverride()
     {
         return $this->_options;
     }
-    
+
 	public static function resetInstance()
 	{
         self::$_instance = null;
-		self::$_instance = new static();			
+		self::$_instance = new static();
 		self::$_instance->_options = new StaticHtmlOutput_Options(self::OPTIONS_KEY);
-		self::$_instance->_view = new StaticHtmlOutput_View();		
+		self::$_instance->_view = new StaticHtmlOutput_View();
 		return self::$_instance;
-	}    
-	
+	}
+
 	protected function prepareArchiveDirectory()
 	{
     	global $blog_id;
@@ -33,11 +33,11 @@ class StaticHtmlOutput_Cli extends StaticHtmlOutput
 		if (!file_exists($archiveDir))
 		{
 			wp_mkdir_p($archiveDir);
-		}    	
-		
+		}
+
 		return [$archiveName, $archiveDir];
 	}
-	
+
 	protected function prepareQueue()
 	{
 		$baseUrl = untrailingslashit(home_url());
@@ -46,21 +46,21 @@ class StaticHtmlOutput_Cli extends StaticHtmlOutput
 			array(trailingslashit($baseUrl)),
 			$this->_getListOfLocalFilesByUrl(array(get_template_directory_uri())),
 			$this->_getListOfLocalFilesByUrl(explode("\n", $this->_options->getOption('additionalUrls')))
-		));	
-		
+		));
+
 		$urlsQueue[] = $baseUrl . '/feed/atom/';
-		$urlsQueue[] = $baseUrl . '/projects/';		
+		$urlsQueue[] = $baseUrl . '/projects/';
 
 		return [$baseUrl, $newBaseUrl, $urlsQueue];
 	}
-	
+
 	protected function addNewUrlsToQueue($urlsQueue, $urlResponse, $currentUrl, $baseUrl)
 	{
 // 	    var_dump(__FUNCTION__);
 // 	    $r = new \ReflectionClass($urlResponse);
 //         var_dump($r->getFilename());
 // 	    exit;
-        // Add new urls to the queue			
+        // Add new urls to the queue
         foreach ($urlResponse->extractAllUrls($baseUrl) as $newUrl)
         {
             if ($this->shouldAddUrlToQueue($newUrl, $currentUrl, $urlsQueue))
@@ -69,63 +69,63 @@ class StaticHtmlOutput_Cli extends StaticHtmlOutput
                 $urlsQueue[] = $newUrl;
             }
         }
-        return $urlsQueue;	
+        return $urlsQueue;
 	}
-	
+
 	protected function shouldAddUrlToQueue($newUrl, $currentUrl, $urlsQueue)
 	{
         return (
-                !isset($this->_exportLog[$newUrl])          && 
-                $newUrl != $currentUrl                      && 
-                !in_array($newUrl,$urlsQueue)               && 
+                !isset($this->_exportLog[$newUrl])          &&
+                $newUrl != $currentUrl                      &&
+                !in_array($newUrl,$urlsQueue)               &&
                 (strpos($newUrl, '&amp;title') === false)   &&
                 (strpos($newUrl, '&amp;description') === false) &&
                 (strpos($newUrl, 'wp-json/oembed/1.0/embed') === false) &&
                 (strpos($newUrl, 'wp-atom.php') === false)
-            );                	
+            );
 	}
-	
+
 	protected function processOembedUrls($archiveDir)
-	{        
+	{
         foreach($this->oembedUrls as $newUrl=>$oldUrl)
         {
             $urlParts               = parse_url($oldUrl);
             parse_str($urlParts['query'], $params);
             $cmd =  '/usr/local/php5/bin/php -r ' . "'" .
-                    '$_SERVER["REQUEST_URI"] = "' . 
-                    $urlParts['path'] . 
+                    '$_SERVER["REQUEST_URI"] = "' .
+                    $urlParts['path'] .
                     '";' .
-                    '$_SERVER["REQUEST_METHOD"] = "' . 
-                    'GET' . 
-                    '";' .                    
-                    '$_GET["url"] = "' . 
-                    $params['url'] . 
-                    '";' .                    
-                    'include "' . 
-                    get_home_path() . 'index.php";' . "'";        
+                    '$_SERVER["REQUEST_METHOD"] = "' .
+                    'GET' .
+                    '";' .
+                    '$_GET["url"] = "' .
+                    $params['url'] .
+                    '";' .
+                    'include "' .
+                    get_home_path() . 'index.php";' . "'";
             $responseBody = `$cmd`;
-                            
-            // $response = wp_remote_get($oldUrl,array('timeout'=>300));                                        
+
+            // $response = wp_remote_get($oldUrl,array('timeout'=>300));
             $file = $this->_getArchivePathFromUrlString($newUrl, false, $archiveDir);
             if (!file_exists(dirname($file)))
             {
                 wp_mkdir_p(dirname($file));
-            }                
+            }
             // file_put_contents($file, $response['body']);
             file_put_contents($file, $responseBody);
-            
-        }	
+
+        }
 	}
-	
-	protected function processQueue($urlsQueue, $currentUrl, $baseUrl, 
+
+	protected function processQueue($urlsQueue, $currentUrl, $baseUrl,
 	    $archiveDir, $newBaseUrl)
 	{
 		$this->_exportLog = array();
         // $c=0;
 		while ($currentUrl = array_shift($urlsQueue))
-		{			
-			echo $currentUrl, "\n";			
-						
+		{
+			echo $currentUrl, "\n";
+
 			$urlResponse = $this->instatiateUrlRequestObject($currentUrl);
 			$urlResponse->cleanup();
 			$this->oembedUrls = array_merge($this->oembedUrls, $urlResponse->oembedUrls);
@@ -133,18 +133,18 @@ class StaticHtmlOutput_Cli extends StaticHtmlOutput
 
 			// Add current url to the list of processed urls
 			$this->_exportLog[$currentUrl] = true;
-			
+
 			$urlsQueue = $this->addNewUrlsToQueue($urlsQueue, $urlResponse, $currentUrl, $baseUrl);
-			
+
 			// Save url data
 			$urlResponse->replaceBaseUlr($baseUrl, $newBaseUrl);
-			$this->_saveUrlData($urlResponse, $archiveDir);	
+			$this->_saveUrlData($urlResponse, $archiveDir);
             // $c++;
-            // if($c > 150) { break; }			
-		}	
-		return $urlsQueue;		
+            // if($c > 150) { break; }
+		}
+		return $urlsQueue;
 	}
-	
+
 	protected function instantiateZipArchive($archiveName)
 	{
 		$tempZip = $archiveName . '.tmp';
@@ -153,68 +153,71 @@ class StaticHtmlOutput_Cli extends StaticHtmlOutput
 		{
 			return new WP_Error('Could not create archive');
 		}
-        
-        return [$tempZip, $zipArchive];	
+
+        return [$tempZip, $zipArchive];
 	}
-	
+
 	protected function processArchiveDir($archiveDir, $zipArchive)
 	{
 		$iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($archiveDir));
 		foreach ($iterator as $fileName => $fileObject)
-		{			
+		{
 			$baseName = basename($fileName);
-			if($baseName != '.' && $baseName != '..') 
+			if($baseName != '.' && $baseName != '..')
 			{
 				if (!$zipArchive->addFile(realpath($fileName), str_replace($archiveDir, '', $fileName)))
 				{
 					return new WP_Error('Could not add file: ' . $fileName);
 				}
 			}
-		}	
+		}
 	}
-	
+
 	protected function createArchive($archiveName, $archiveDir)
 	{
-	    list($tempZip, $zipArchive) = $this->instantiateZipArchive($archiveName);				
-		$this->processArchiveDir($archiveDir, $zipArchive);						
-		$zipArchive->close();		
+	    list($tempZip, $zipArchive) = $this->instantiateZipArchive($archiveName);
+		$this->processArchiveDir($archiveDir, $zipArchive);
+		$zipArchive->close();
 		$archiveName .= '.zip';
-		rename($tempZip, $archiveName); 
-		return $archiveName;	
+		rename($tempZip, $archiveName);
+		return $archiveName;
 	}
-	
+
 	protected function _downloadFeedsAsIndexDotXml($archiveDir, $baseUrl, $newBaseUrl)
-	{	    
+	{
 		//go through and look for feed URLs and download them
         $feedUrls = array_filter(
-            array_keys($this->_exportLog), 
-            function($item){                
+            array_keys($this->_exportLog),
+            function($item){
                 return strpos($item, '/feed.xml') !== false;
             }
         );
-        
+
         foreach($feedUrls as $currentUrl)
         {
-            $currentUrl = preg_replace('%feed.xml$%','',$currentUrl);            
-            $urlResponse = $this->instatiateUrlRequestObject($currentUrl);                
-            $this->_saveUrlDataRss($urlResponse, $archiveDir, $baseUrl, $newBaseUrl);	
-        }        
-        
+            $currentUrl = preg_replace('%feed.xml$%','',$currentUrl);
+            $urlResponse = $this->instatiateUrlRequestObject($currentUrl);
+            $this->_saveUrlDataRss($urlResponse, $archiveDir, $baseUrl, $newBaseUrl);
+        }
+
         //and our atom feed
         rename(
             $archiveDir . '/feed/atom/index.html',
             $archiveDir . '/feed/atom/feed.xml'
         );
-        
-        $this->swapUrlsInFile($archiveDir . '/feed/atom/feed.xml', $baseUrl, $newBaseUrl);        
+
+        $this->swapUrlsInFile($archiveDir . '/feed/atom/feed.xml', $baseUrl, $newBaseUrl);
 	}
-	
+
 	protected function _generateHtaccess($archiveDir)
 	{
 	    $htaccess = '
-php_value short_open_tag 0
+<IfModule mod_php7.c>
+  php_value short_open_tag 1
+</IfModule>
 
 RewriteEngine On
+
 #sends www.example.com to example.com
 RewriteCond %{HTTP_HOST} ^www\.alanstorm\.com
 RewriteRule ^(.*)$ http://alanstorm.com/$1 [R=301,L]
@@ -242,6 +245,14 @@ RewriteRule ^rss/? http://alanstorm.com/category/programming-quickies/feed/feed.
 RewriteCond %{HTTP_HOST} ^magento-quickies\.alanstorm\.com [NC]
 RewriteRule ^(.*)$ http://alanstorm.com/$1 [R=301,L]
 #END: tumblr posts
+
+#force HTTPS
+
+#RewriteCond %{SERVER_PORT} 80
+#RewriteRule ^(.*)$ https://alanstorm.com/$1 [R,L]
+RewriteCond %{SERVER_PORT} 80
+RewriteCond %{HTTP_HOST} !^alanstorm.pairserver.com
+RewriteRule ^(.*)$ https://alanstorm.com/$1 [R,L]
 
 #people who mistakingly think we are a directory
 #Old rules for old Content Courier application
@@ -296,7 +307,7 @@ RewriteRule ^magneto_2_object_manager_instance_objects http://alanstorm.com/mage
 #    RewriteRule ^when_to_buy_a_site$ /tt4/when_to_buy_a_site [L,R=301]
 #    RewriteRule ^windows_xp_dos_window$ /tt4/windows_xp_dos_window [L,R=301]
 #    RewriteRule ^xtr_frontpage$ /tt4/xtr_frontpage [L,R=301]
-    
+
     #old old crap
     RewriteRule ^dmg/PHP_Prototype.dmg /2005/projects/PHP_Prototype.dmg [R=301,L]
     RewriteRule ^contact.html /site/contact [R=301,L]
@@ -304,9 +315,9 @@ RewriteRule ^magneto_2_object_manager_instance_objects http://alanstorm.com/mage
     RewriteRule ^resume.doc /site/resume [R=301,L]
     RewriteRule ^resume.html /resume [R=301,L]
 
-    RewriteRule ^home/{0,1} / [L,R=301]
-    RewriteRule ^site/{0,1}$ / [L,R=301]    
-    RewriteRule ^site/([a-zA-Z0-9_]+)/*$ /$1 [L,R=301]    
+    RewriteRule ^home/{0,1}$ / [L,R=301]
+    RewriteRule ^site/{0,1}$ / [L,R=301]
+    RewriteRule ^site/([a-zA-Z0-9_]+)/*$ /$1 [L,R=301]
 #END: Old rewrite rules that are still needed
 
 #START: WordPress casing issue
@@ -314,7 +325,7 @@ RewriteRule ^magneto_2_object_manager_instance_objects http://alanstorm.com/mage
     RewriteRule ^Centered /centered [L,R=301]
     RewriteRule ^Five_Firefox_Extensions /five_firefox_extensions [L,R=301]
     RewriteRule ^How_Odd___ /how_odd___ [L,R=301]
-    RewriteRule ^OS_X_10_4_and_transmit_22 /os_x_10_4_and_transmit_22 [L,R=301]      
+    RewriteRule ^OS_X_10_4_and_transmit_22 /os_x_10_4_and_transmit_22 [L,R=301]
 #END: WordPress casing issue
 
 #START: Reverse of previous rewrites, in order to hew to WordPress worldview
@@ -400,35 +411,35 @@ RewriteRule ^category/orocrm/ /category/oro [L,R=301]
 #RewriteCond %{REQUEST_FILENAME} !-d
 #    RewriteRule ^(.*)$ index.php?uri=$1 [L,QSA]
 ';
-        file_put_contents($archiveDir . '.htaccess', $htaccess);        	
+        file_put_contents($archiveDir . '.htaccess', $htaccess);
 	}
-	
+
 	protected function _generateArchive()
-	{		
+	{
 		set_time_limit(0);
 		list($archiveName, $archiveDir) = $this->prepareArchiveDirectory();
 
-        $this->_generateHtaccess($archiveDir);	            
-        
+        $this->_generateHtaccess($archiveDir);
+
 		// Prepare queue
         list($baseUrl, $newBaseUrl, $urlsQueue) = $this->prepareQueue();
-							
-		// Process queue		
-		$urlsQueue = $this->processQueue($urlsQueue, $currentUrl, $baseUrl, 
-	         $archiveDir, $newBaseUrl);		
+
+		// Process queue
+		$urlsQueue = $this->processQueue($urlsQueue, $currentUrl, $baseUrl,
+	         $archiveDir, $newBaseUrl);
 
 		//grab all feeds
         $this->_downloadFeedsAsIndexDotXml($archiveDir, $baseUrl, $newBaseUrl);
-		
+
 		//grab all oembeds
         // $this->processOembedUrls($archiveDir);
-		
-		// Create archive object				
+
+		// Create archive object
 		$archiveName = $this->createArchive($archiveName, $archiveDir);
 		return str_replace(ABSPATH, trailingslashit(home_url()), $archiveName);
-		
+
 	}
-	
+
 	protected function _getArchivePathFromUrlString($url, $isHtml, $archiveDir)
 	{
 		$urlInfo = parse_url($url);
@@ -445,30 +456,30 @@ RewriteRule ^category/orocrm/ /category/oro [L,R=301]
         // Prepare file name and save file contents
 		$fileExtension = ($isHtml || !isset($pathInfo['extension']) ? 'html' : $pathInfo['extension']);
 		$fileName = $fileDir . '/' . $pathInfo['filename'] . '.' . $fileExtension;
-		return $fileName;		
+		return $fileName;
 	}
-	
+
 	protected function _getArchivePathFromUrl(StaticHtmlOutput_UrlRequest $url, $archiveDir)
 	{
-	    return $this->_getArchivePathFromUrlString($url->getUrl(), $url->isHtml(), $archiveDir);	
+	    return $this->_getArchivePathFromUrlString($url->getUrl(), $url->isHtml(), $archiveDir);
 	}
-	
+
 	protected function _saveUrlDataRss(StaticHtmlOutput_UrlRequest $url, $archiveDir, $baseUrl, $newBaseUrl)
 	{
 	    $this->_saveUrlData($url, $archiveDir);
 	    $path = $this->_getArchivePathFromUrl($url, $archiveDir);
 	    rename($path, dirname($path) . '/feed.xml');
-	    
+
 	    $this->swapUrlsInFile(dirname($path) . '/feed.xml', $baseUrl, $newBaseUrl);
 	}
-		
+
     protected function swapUrlsInFile($file, $baseUrl, $newBaseUrl)
     {
         $contents = file_get_contents($file);
         $contents = str_replace($baseUrl, $newBaseUrl, $contents);
-        file_put_contents($file, $contents);        
+        file_put_contents($file, $contents);
     }
-    		
+
 	protected function instatiateUrlRequestObject($currentUrl)
 	{
     	return new StaticHtmlOutput_UrlRequest_Cli($currentUrl);

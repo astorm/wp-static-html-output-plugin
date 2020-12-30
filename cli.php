@@ -59,7 +59,10 @@ class WPStaticHtmlOutput_Command extends WP_CLI_Command {
         $path = trim($path,'/');
         if(file_exists(__DIR__ . '/' . 'instructions.php'))
         {
-            WP_CLI::success(file_get_contents(__DIR__ . '/' . 'instructions.php'));    
+            ob_start();
+            include((__DIR__ . '/' . 'instructions.php'));
+            $instructionOutput = ob_get_clean();
+            WP_CLI::success($instructionOutput);    
         }
     }
 }
